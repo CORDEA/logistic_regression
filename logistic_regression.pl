@@ -18,19 +18,27 @@
 use strict;
 use warnings;
 
+use Text::CSV_XS;
 use Math::MatrixReal;
 
-my $data = Math::MatrixReal->new_from_rows(
-    [
-        [0, 0, 0, 0]
-    ]
-);
+my $csv_file_name = $ARGV[0];
+my $answer_file_name = $ARGV[1];
 
-my $answer = Math::MatrixReal->new_from_rows(
-    [
-        [0]
-    ]
-);
+my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1});
+my @lines = ();
+open my $fh, "<:encoding(utf8)", $csv_file_name or die "$csv_file_name: $!";
+while (my $row = $csv->getline($fh)) {
+    push @lines, \@$row;
+}
+close $fh;
+
+open IN, $answer_file_name;
+my @raw_answer = <IN>;
+close IN;
+@raw_answer = map { [$_ == 0 ? 0 : 1] } @raw_answer;
+
+my $data = Math::MatrixReal->new_from_rows(\@lines);
+my $answer = Math::MatrixReal->new_from_rows(\@raw_answer);
 
 my $number_of_learnings = 1000;
 my $alpha = 0.01;
@@ -52,7 +60,7 @@ sub _logistic {
         ++$i;
     }
     return $theta;
-};
+}
 
 my $theta = _logistic();
 print $theta;
