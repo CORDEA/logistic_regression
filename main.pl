@@ -15,11 +15,14 @@
 # Author: Yoshihiro Tanaka <contact@cordea.jp>
 # date  : 2019-05-13
 
+use lib "./lib";
+
 use strict;
 use warnings;
 
 use Text::CSV_XS;
 use Math::MatrixReal;
+use LogisticRegression;
 
 my $csv_file_name = $ARGV[0];
 my $answer_file_name = $ARGV[1];
@@ -40,34 +43,6 @@ close IN;
 my $data = Math::MatrixReal->new_from_rows(\@lines);
 my $answer = Math::MatrixReal->new_from_rows(\@raw_answer);
 
-my $number_of_learnings = 1000;
-my $alpha = 0.01;
-
-sub _sigmoid {
-    my $x = shift;
-    return 1 / (1 + exp(-$x));
-}
-
-sub _logistic {
-    my $i = 0;
-    my ($row, $column) = $data->dim();
-    my $theta = Math::MatrixReal->new($column, 1);
-    my $score;
-    while ($i < $number_of_learnings) {
-        $score = $data * $theta;
-        $score = $score->each(sub { _sigmoid(shift) });
-        $theta -= $alpha * ~$data * ($score - $answer) / $row;
-        ++$i;
-    }
-    return $theta;
-}
-
-sub _predict {
-    my $theta = shift;
-    my $score = $data * $theta;
-    $score = $score->each(sub { _sigmoid(shift) });
-    return $score->each(sub { shift >= 0.5 });
-}
-
-my $theta = _logistic();
-print $answer == _predict($theta);
+my $regression = LogisticRegression->new($data, $answer, 1000, 0.01);
+my $theta = $regression->logistic();
+print $answer == $regression->predict($theta);
