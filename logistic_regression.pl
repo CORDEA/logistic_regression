@@ -70,4 +70,4 @@ sub _predict {
 }
 
 my $theta = _logistic();
-_predict($theta);
+print $answer == _predict($theta);
