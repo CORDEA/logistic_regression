@@ -62,5 +62,12 @@ sub _logistic {
     return $theta;
 }
 
+sub _predict {
+    my $theta = shift;
+    my $score = $data * $theta;
+    $score = $score->each(sub { _sigmoid(shift) });
+    return $score->each(sub { shift >= 0.5 });
+}
+
 my $theta = _logistic();
-print $theta;
+_predict($theta);
